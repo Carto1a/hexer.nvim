@@ -1,0 +1,8 @@
+{
+    "lspconfig": {
+        "lua_ls": {
+            "enable": true,
+            "vim": true
+        }
+    }
+}
