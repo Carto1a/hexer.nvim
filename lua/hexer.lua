@@ -1,30 +1,57 @@
 local M = {}
 
+local utils = require("hexer.utils")
+local hexer = require("hexer.core")
+local hexer_buffer = require("hexer.buffer")
+
 M.cfg = {}
 
 local augroup_hexer = vim.api.nvim_create_augroup('hexer', { clear = true })
 
 function M.dump()
-  vim.bo.bin = true
-  vim.b['hexer'] = true
-  vim.b.bin_ft = vim.bo.ft
-  vim.bo.ft = "xxd"
-  vim.cmd([[%!]] .. "xxd")
+  local current_buf_id = vim.api.nvim_get_current_buf()
+  local file_path = vim.fn.expand("%:p")
+  local buf_persed_data = hexer.dump(current_buf_id)
+  local hexed_buffers = hexer_buffer:new(file_path, "hex", "big-endian", "ascii")
 
-  local attached_servers = vim.lsp.get_clients({ bufnr = vim.api.nvim_get_current_buf() })
-  for _, attached_server in ipairs(attached_servers) do
-    attached_server.stop()
+  hexer.add_buffer(hexed_buffers)
+
+  for index, value in ipairs(buf_persed_data.address) do
+    vim.api.nvim_buf_set_lines(hexed_buffers.buf_address, index, index, false, {value .. ": "})
   end
 
-  local undolevels = vim.o.undolevels
-  vim.o.undolevels = -1
-  vim.cmd([[exe "normal a \<BS>\<Esc>"]])
-  vim.o.undolevels = undolevels
+  for index, value in ipairs(buf_persed_data.hex) do
+    print(value)
+    vim.api.nvim_buf_set_lines(hexed_buffers.buf_hex, index, index, false, {value})
+  end
 
-  vim.bo.mod = false
+  vim.api.nvim_set_current_buf(hexed_buffers.buf_hex)
 
-  -- TODO: pegar a config de spell depois
-  vim.cmd([[set nospell]])
+  -- for index, value in ipairs(buf_persed_data.hex) do
+  --
+  -- end
+  --
+  -- for index, value in ipairs(buf_persed_data.text) do
+  --
+  -- end
+
+  -- vim.bo.bin = true
+  -- vim.b['hexer'] = true
+  -- vim.b.bin_ft = vim.bo.ft
+  -- vim.bo.ft = "xxd"
+  -- -- vim.cmd([[%!]] .. "xxd")
+  --
+  -- utils.unload_lsp_servers()
+  --
+  -- local undolevels = vim.o.undolevels
+  -- vim.o.undolevels = -1
+  -- vim.cmd([[exe "normal a \<BS>\<Esc>"]])
+  -- vim.o.undolevels = undolevels
+  --
+  -- vim.bo.mod = false
+  --
+  -- -- TODO: pegar a config de spell depois
+  -- vim.cmd([[set nospell]])
 end
 
 function M.assemble()
@@ -45,7 +72,7 @@ function M.assemble()
 end
 
 function M.save()
-  
+
 end
 
 local function setup_autocmds()
@@ -77,7 +104,7 @@ function M.setup(args)
   end
 
   local commands = {
-    start = function ()
+    start = function()
       M.dump()
     end,
     save = function()
@@ -89,6 +116,10 @@ function M.setup(args)
     search = function(cmd_args)
       print("search")
       print("args: " .. vim.inspect(cmd_args))
+    end,
+    test = function(cmd_args)
+      vim.api.nvim_open_win(0, false,
+        { split = 'left', width = 20, style = "minimal" })
     end
   }
 
@@ -108,7 +139,6 @@ function M.setup(args)
   })
 
   setup_autocmds();
-
 end
 
 return M
