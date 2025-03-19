@@ -2,7 +2,9 @@ require("hexer.buffer")
 
 ---@class Hexer
 ---@field buffers { [integer]: HexerBuffer }
-local M = {}
+local M = {
+  buffers = {}
+}
 
 ---@param line string
 ---@return HexerParsedLine
@@ -20,7 +22,7 @@ local function parser(line)
 end
 
 ---@param buf integer
----@return HexerParsed
+---@return HexerParsedLine[]
 function M.dump(buf)
   buf = buf or 0
 
@@ -32,6 +34,7 @@ function M.dump(buf)
 
   local lines = vim.api.nvim_buf_get_lines(buf, 0, lines_total, false)
 
+  ---@type HexerParsedLine[]
   local parsed_lines = {}
   for index, line in ipairs(lines) do
     local parsed_line = parser(line)
@@ -43,8 +46,7 @@ end
 
 ---@param hex_buf HexerBuffer
 function M.add_buffer(hex_buf)
-  -- NOTE: usar table.
-  M.buffers[hex_buf.buf_hex] = hex_buf
+  table.insert(M.buffers, hex_buf.buf_hex, hex_buf)
 end
 
 return M

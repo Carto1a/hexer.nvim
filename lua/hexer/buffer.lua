@@ -8,6 +8,23 @@
 ---@field encoding ("ascii" | "utf-8")
 local M = {}
 
+---@param buf integer
+local function load_buf_settings(buf)
+  vim.bo[buf].ft = "xdd"
+  vim.bo[buf].bin = true
+  vim.bo[buf].mod = false
+
+  vim.api.nvim_buf_call(buf, function()
+    vim.cmd([[set nospell]])
+  end)
+end
+
+function M:load_buf_settings()
+  load_buf_settings(self.buf_address)
+  load_buf_settings(self.buf_hex)
+  load_buf_settings(self.buf_text)
+end
+
 ---@param address_type ("hex" | "binary")
 ---@param endianness ("big-endian" | "little-endian")
 ---@param encoding ("ascii" | "utf-8")

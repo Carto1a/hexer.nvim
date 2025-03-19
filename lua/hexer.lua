@@ -9,49 +9,42 @@ M.cfg = {}
 local augroup_hexer = vim.api.nvim_create_augroup('hexer', { clear = true })
 
 function M.dump()
+  -- TODO: dont dump mod buffer
+
   local current_buf_id = vim.api.nvim_get_current_buf()
   local file_path = vim.fn.expand("%:p")
-  local buf_persed_data = hexer.dump(current_buf_id)
+
+  -- TODO: fazer isso depois
+  -- utils.unload_lsp_servers()
+
+  local buf_parsed_data = hexer.dump(current_buf_id)
   local hexed_buffers = hexer_buffer:new(file_path, "hex", "big-endian", "ascii")
 
   hexer.add_buffer(hexed_buffers)
 
-  for index, value in ipairs(buf_persed_data.address) do
-    vim.api.nvim_buf_set_lines(hexed_buffers.buf_address, index, index, false, {value .. ": "})
+  for index, parsed_data in ipairs(buf_parsed_data) do
+    local index_0 = index - 1
+    vim.api.nvim_buf_set_lines(hexed_buffers.buf_address, index_0, index_0, false, { parsed_data.address .. ": " })
+    vim.api.nvim_buf_set_lines(hexed_buffers.buf_hex, index_0, index_0, false, { parsed_data.hex })
+    vim.api.nvim_buf_set_lines(hexed_buffers.buf_text, index_0, index_0, false, { parsed_data.text })
   end
 
-  for index, value in ipairs(buf_persed_data.hex) do
-    print(value)
-    vim.api.nvim_buf_set_lines(hexed_buffers.buf_hex, index, index, false, {value})
-  end
+  -- TODO: disable "lukas-reineke/indent-blankline.nvim" on text buffer
+  -- NOTE: ft xxd not work
+  hexed_buffers:load_buf_settings()
 
+  vim.api.nvim_buf_delete(current_buf_id, { force = true })
   vim.api.nvim_set_current_buf(hexed_buffers.buf_hex)
 
-  -- for index, value in ipairs(buf_persed_data.hex) do
-  --
-  -- end
-  --
-  -- for index, value in ipairs(buf_persed_data.text) do
-  --
-  -- end
+  vim.api.nvim_open_win(
+    hexed_buffers.buf_address,
+    false,
+    { width = 10, split = "left", style = "minimal", focusable = false })
 
-  -- vim.bo.bin = true
-  -- vim.b['hexer'] = true
-  -- vim.b.bin_ft = vim.bo.ft
-  -- vim.bo.ft = "xxd"
-  -- -- vim.cmd([[%!]] .. "xxd")
-  --
-  -- utils.unload_lsp_servers()
-  --
-  -- local undolevels = vim.o.undolevels
-  -- vim.o.undolevels = -1
-  -- vim.cmd([[exe "normal a \<BS>\<Esc>"]])
-  -- vim.o.undolevels = undolevels
-  --
-  -- vim.bo.mod = false
-  --
-  -- -- TODO: pegar a config de spell depois
-  -- vim.cmd([[set nospell]])
+  vim.api.nvim_open_win(
+    hexed_buffers.buf_text,
+    false,
+    { width = 10, split = "right", style = "minimal" })
 end
 
 function M.assemble()
