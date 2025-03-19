@@ -15,7 +15,7 @@ function M.dump()
   local file_path = vim.fn.expand("%:p")
 
   -- TODO: fazer isso depois
-  -- utils.unload_lsp_servers()
+  utils.unload_lsp_servers(current_buf_id)
 
   local buf_parsed_data = hexer.dump(current_buf_id)
   local hexed_buffers = hexer_buffer:new(file_path, "hex", "big-endian", "ascii")
@@ -39,12 +39,12 @@ function M.dump()
   vim.api.nvim_open_win(
     hexed_buffers.buf_address,
     false,
-    { width = 10, split = "left", style = "minimal", focusable = false })
+    { width = 10, split = "left", style = "minimal", focusable = false, noautocmd = true })
 
   vim.api.nvim_open_win(
     hexed_buffers.buf_text,
     false,
-    { width = 10, split = "right", style = "minimal" })
+    { width = 16, split = "right", style = "minimal" })
 end
 
 function M.assemble()
