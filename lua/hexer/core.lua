@@ -1,47 +1,43 @@
-require("hexer.buffer")
-
 ---@class Hexer
----@field buffers { [integer]: HexerBuffer }
-local M = {
-  buffers = {}
-}
+local M = { }
 
----@param line string
----@return HexerParsedLine
-local function parser(line)
-  assert(type(line) == "string", "line is not a string")
-
-  ---@type HexerParsedLine
-  local parsed_line = {}
-
-  parsed_line.address = string.sub(line, 1, 8)
-  parsed_line.hex = string.sub(line, 11, 49)
-  parsed_line.text = string.sub(line, 52, 68)
-
-  return parsed_line
-end
-
----@param buf integer
+---@param path string
 ---@return HexerParsedLine[]
-function M.dump(buf)
-  buf = buf or 0
+local function parser(path)
+  local result = vim.system({ 'xxd', path }, { text = true }):wait()
 
-  vim.api.nvim_buf_call(buf, function()
-    vim.cmd([[%!]] .. "xxd")
-  end)
-
-  local lines_total = vim.api.nvim_buf_line_count(buf)
-
-  local lines = vim.api.nvim_buf_get_lines(buf, 0, lines_total, false)
-
-  ---@type HexerParsedLine[]
   local parsed_lines = {}
-  for index, line in ipairs(lines) do
-    local parsed_line = parser(line)
+  local index = 1
+  for line in string.gmatch(result.stdout, "\n") do
+    local parsed_line = {}
+
+    parsed_line.address = string.sub(line, 1, 8)
+    parsed_line.hex = string.sub(line, 11, 49)
+    parsed_line.text = string.sub(line, 52, 68)
+
     parsed_lines[index] = parsed_line
+    index = index + 1
   end
 
   return parsed_lines
+end
+
+---@param buf integer
+---@param parser_func fun(path: string): string[]
+---@return HexerParsedLine[]
+function M.dump(buf, parser_func)
+  buf = buf or 0
+
+  local file_path
+  vim.api.nvim_buf_call(buf, function()
+    file_path = vim.fn.expand("%:p")
+  end)
+
+  if parser_func ~= nil then
+    return parser_func(file_path)
+  end
+
+  return parser(file_path)
 end
 
 ---@param hex_buf HexerBuffer

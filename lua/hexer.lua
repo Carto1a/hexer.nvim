@@ -9,42 +9,42 @@ M.cfg = {}
 local augroup_hexer = vim.api.nvim_create_augroup('hexer', { clear = true })
 
 function M.dump()
-  -- TODO: dont dump mod buffer
-
-  local current_buf_id = vim.api.nvim_get_current_buf()
-  local file_path = vim.fn.expand("%:p")
-
-  -- TODO: fazer isso depois
-  utils.unload_lsp_servers(current_buf_id)
-
-  local buf_parsed_data = hexer.dump(current_buf_id)
-  local hexed_buffers = hexer_buffer:new(file_path, "hex", "big-endian", "ascii")
-
-  hexer.add_buffer(hexed_buffers)
-
-  for index, parsed_data in ipairs(buf_parsed_data) do
-    local index_0 = index - 1
-    vim.api.nvim_buf_set_lines(hexed_buffers.buf_address, index_0, index_0, false, { parsed_data.address .. ": " })
-    vim.api.nvim_buf_set_lines(hexed_buffers.buf_hex, index_0, index_0, false, { parsed_data.hex })
-    vim.api.nvim_buf_set_lines(hexed_buffers.buf_text, index_0, index_0, false, { parsed_data.text })
-  end
-
-  -- TODO: disable "lukas-reineke/indent-blankline.nvim" on text buffer
-  -- NOTE: ft xxd not work
-  hexed_buffers:load_buf_settings()
-
-  vim.api.nvim_buf_delete(current_buf_id, { force = true })
-  vim.api.nvim_set_current_buf(hexed_buffers.buf_hex)
-
-  vim.api.nvim_open_win(
-    hexed_buffers.buf_address,
-    false,
-    { width = 10, split = "left", style = "minimal", focusable = false, noautocmd = true })
-
-  vim.api.nvim_open_win(
-    hexed_buffers.buf_text,
-    false,
-    { width = 16, split = "right", style = "minimal" })
+  -- -- TODO: dont dump mod buffer
+  --
+  -- local current_buf_id = vim.api.nvim_get_current_buf()
+  -- local file_path = vim.fn.expand("%:p")
+  --
+  -- -- TODO: fazer isso depois
+  -- utils.unload_lsp_servers(current_buf_id)
+  --
+  -- local buf_parsed_data = hexer.dump(current_buf_id)
+  -- local hexed_buffers = hexer_buffer:new(file_path, "hex", "big-endian", "ascii")
+  --
+  -- hexer.add_buffer(hexed_buffers)
+  --
+  -- for index, parsed_data in ipairs(buf_parsed_data) do
+  --   local index_0 = index - 1
+  --   vim.api.nvim_buf_set_lines(hexed_buffers.buf_address, index_0, index_0, false, { parsed_data.address .. ": " })
+  --   vim.api.nvim_buf_set_lines(hexed_buffers.buf_hex, index_0, index_0, false, { parsed_data.hex })
+  --   vim.api.nvim_buf_set_lines(hexed_buffers.buf_text, index_0, index_0, false, { parsed_data.text })
+  -- end
+  --
+  -- -- TODO: disable "lukas-reineke/indent-blankline.nvim" on text buffer
+  -- -- NOTE: ft xxd not work
+  -- hexed_buffers:load_buf_settings()
+  --
+  -- vim.api.nvim_buf_delete(current_buf_id, { force = true })
+  -- vim.api.nvim_set_current_buf(hexed_buffers.buf_hex)
+  --
+  -- vim.api.nvim_open_win(
+  --   hexed_buffers.buf_address,
+  --   false,
+  --   { width = 10, split = "left", style = "minimal", focusable = false, noautocmd = true })
+  --
+  -- vim.api.nvim_open_win(
+  --   hexed_buffers.buf_text,
+  --   false,
+  --   { width = 16, split = "right", style = "minimal" })
 end
 
 function M.assemble()
