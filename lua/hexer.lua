@@ -2,24 +2,43 @@ local M = {}
 
 local utils = require("hexer.utils")
 local hexer = require("hexer.core")
+
 local hexer_buffer = require("hexer.buffer")
+local hexer_buffer_hex = require("hexer.buffer.hex_buf")
+local hexer_buffer_text = require("hexer.buffer.text_buf")
+local hexer_buffer_address = require("hexer.buffer.address_buf")
+
+local hexer_win = require("hexer.window")
+local hexer_win_hex = require("hexer.window.hex_win")
+local hexer_win_text = require("hexer.window.text_win")
+local hexer_win_address = require("hexer.window.address_win")
+local hexer_win_menager = require("hexer.window.manager")
 
 M.cfg = {}
 
 local augroup_hexer = vim.api.nvim_create_augroup('hexer', { clear = true })
 
-function M.dump()
-  -- -- TODO: dont dump mod buffer
-  --
-  -- local current_buf_id = vim.api.nvim_get_current_buf()
-  -- local file_path = vim.fn.expand("%:p")
-  --
-  -- -- TODO: fazer isso depois
-  -- utils.unload_lsp_servers(current_buf_id)
-  --
-  -- local buf_parsed_data = hexer.dump(current_buf_id)
-  -- local hexed_buffers = hexer_buffer:new(file_path, "hex", "big-endian", "ascii")
-  --
+---@param buf? integer
+---@param unload? boolean
+function M.start_hexer(buf, unload)
+  buf = buf or 0
+  unload = unload or false
+
+  local buf_hex = hexer_buffer_hex:new("big-endian")
+  local buf_text = hexer_buffer_text:new("big-endian", "ascii")
+  local buf_address = hexer_buffer_address:new()
+
+  local win_hex = hexer_win_hex:new(buf_hex)
+  local win_text = hexer_win_text:new(buf_text)
+  local win_address = hexer_win_address:new(buf_address)
+
+  if buf == 0 then buf = vim.api.nvim_get_current_buf() end
+  local buf_is_valid = vim.api.nvim_buf_is_valid(buf)
+  assert(buf_is_valid, "not a valid buf")
+
+  hexer_win_menager.start_windows(win_address, win_hex, win_text)
+
+  local buf_parsed_data = hexer.dump(buf)
   -- hexer.add_buffer(hexed_buffers)
   --
   -- for index, parsed_data in ipairs(buf_parsed_data) do
@@ -98,7 +117,7 @@ function M.setup(args)
 
   local commands = {
     start = function()
-      M.dump()
+      M.start_hexer()
     end,
     save = function()
       print("save")

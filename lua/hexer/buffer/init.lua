@@ -1,6 +1,11 @@
 ---@class HexerBuffer
 ---@field id integer
 local M = {}
+M.__index = M
+
+function M:__tostring()
+  return "HexerBuffer"
+end
 
 ---@param buf integer
 local function load_buf_settings(buf)
@@ -20,7 +25,10 @@ function M:new(listed)
   ---@type HexerBuffer
   local obj = setmetatable({}, self)
 
-  obj.id = vim.api.nvim_create_buf(listed, true)
+  obj.id = vim.api.nvim_create_buf(listed, false)
+  assert(obj.id, "can't create buf, too bad")
+  vim.api.nvim_set_option_value("buftype", "", { buf = obj.id })
+  -- vim.api.nvim_set_option_value("buftype", "acwrite", { buf = obj.id })
 
   return obj
 end

@@ -5,6 +5,11 @@ local types = require("hexer.buffer.types")
 ---@field endianness endianness
 ---@field encoding encoding
 local M = setmetatable({}, { __index = buffer })
+M.__index = M
+
+function M:__tostring()
+  return "HexerBufferText"
+end
 
 local validators = {
   encoding = function(value)

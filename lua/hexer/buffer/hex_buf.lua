@@ -4,6 +4,11 @@ local types = require("hexer.buffer.types")
 ---@class HexerBufferHex: HexerBuffer
 ---@field endianness endianness
 local M = setmetatable({}, { __index = buffer })
+M.__index = M
+
+function M:__tostring()
+  return "HexerBufferHex"
+end
 
 local validators = {
   endianness = function(value)
