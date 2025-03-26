@@ -1,20 +1,32 @@
+---@class HexerFormatOptions
+---@field grouped_bytes_per_row integer
+---@field group_of_bytes integer
+
+---@class HexerConfig
+---@field format HexerFormatOptions
+
+---@class HexerModule
+---@field cfg HexerConfig
 local M = {}
 
 local utils = require("hexer.utils")
-local hexer = require("hexer.core")
+local core = require("hexer.core")
 
-local hexer_buffer = require("hexer.buffer")
 local hexer_buffer_hex = require("hexer.buffer.hex_buf")
 local hexer_buffer_text = require("hexer.buffer.text_buf")
 local hexer_buffer_address = require("hexer.buffer.address_buf")
 
-local hexer_win = require("hexer.window")
 local hexer_win_hex = require("hexer.window.hex_win")
 local hexer_win_text = require("hexer.window.text_win")
 local hexer_win_address = require("hexer.window.address_win")
 local hexer_win_menager = require("hexer.window.manager")
 
-M.cfg = {}
+M.cfg = {
+  format = {
+    grouped_bytes_per_row = 8,
+    group_of_bytes = 4
+  }
+}
 
 local augroup_hexer = vim.api.nvim_create_augroup('hexer', { clear = true })
 
@@ -38,7 +50,10 @@ function M.start_hexer(buf, unload)
 
   hexer_win_menager.start_windows(win_address, win_hex, win_text)
 
-  local buf_parsed_data = hexer.dump(buf)
+  core.dump_buf_to(buf, buf_hex.id, M.cfg.format)
+
+
+
   -- hexer.add_buffer(hexed_buffers)
   --
   -- for index, parsed_data in ipairs(buf_parsed_data) do
