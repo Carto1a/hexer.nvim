@@ -48,41 +48,58 @@ end
 ---@field lines string[]
 
 
---- TODO: não estou retornado o resto, o buffer para a proxima kk
+---@param line string
+---@param group_bytes_size integer
+---@return string
+local function group_bytes(line, group_bytes_size)
+  assert(group_bytes_size > 1, "not a valid value to group_bytes_size")
+
+  local group_capture_bytes = nil
+  local group_capture_bytes_buffer = {}
+  for i = 1, group_bytes_size do
+    table.insert(group_capture_bytes_buffer, i, "%w")
+  end
+  group_capture_bytes = "(" .. table.concat(group_capture_bytes_buffer) .. ")"
+
+  local formated_line = line:gsub(group_capture_bytes, "%1 "):gsub("%s$", "")
+  return formated_line
+end
 
 ---@param line string
 ---@param buffer string
+---@param is_last_line boolean
 ---@param format HexerFormatOptions
 ---@return HexerFormatHexLineReturn
-function format_hex_line(line, buffer, format)
-  -- 60
+local function format_hex_line(line, buffer, is_last_line, format)
+  assert(line:len(), "nothing to format")
+
   ---@type HexerFormatHexLineReturn
   local return_value = {
     buffer = "",
     lines = {}
   }
 
-  local line_to_format = buffer .. line
+  local line_buffer = buffer .. line
+  local bytes_in_row = format.group_of_bytes * format.grouped_bytes_per_row
 
-  local group_capture_bytes = nil
-  local group_capture_bytes_buffer = {}
-  for i = 1, format.group_of_bytes do
-    table.insert(group_capture_bytes_buffer, i, "%w")
-  end
-  group_capture_bytes = "(" .. table.concat(group_capture_bytes_buffer) .. ")"
-
-  local size_group_bytes = format.group_of_bytes * format.grouped_bytes_per_row
-  local chars_to_format = line_to_format:sub(1, size_group_bytes)
-  local format_count = 1
+  local format_count = 0
   while true do
-    if chars_to_format == "" or not chars_to_format then
+    local start_to_format = bytes_in_row * format_count + 1
+    local end_to_format = bytes_in_row * (format_count + 1)
+    local bytes_to_format = line_buffer:sub(start_to_format, end_to_format)
+
+    if bytes_to_format:len() < bytes_in_row and not is_last_line then
+      return_value.buffer = bytes_to_format
       break
     end
 
-    local formated_line = chars_to_format:gsub(group_capture_bytes, "%1 ")
+    local formated_line = group_bytes(bytes_to_format, format.group_of_bytes)
     table.insert(return_value.lines, formated_line)
 
-    chars_to_format = line_to_format:sub(size_group_bytes * format_count, size_group_bytes * format_count + 1)
+    if is_last_line then
+      break
+    end
+
     format_count = format_count + 1
   end
 
@@ -113,21 +130,21 @@ function M.dump_buf_to(buf, buf_to_write, format)
   assert(result.code, "code: ", result.code)
   assert(result.stdout, "no data in stdout, maybe buffer is empty")
 
-  local group_capture_bytes = nil
-  local group_capture_bytes_buffer = {}
-  for i = 1, format.group_of_bytes do
-    table.insert(group_capture_bytes_buffer, i, "%w")
-  end
-  group_capture_bytes = "(" .. table.concat(group_capture_bytes_buffer) .. ")"
-
   local i = 0
   ---@type HexerFormatHexLineReturn
   local formated = { lines = {}, buffer = "" }
+  local last_line = ""
   for line in result.stdout:gmatch("[^\r\n]+") do
-    formated = format_hex_line(line, formated.buffer, format)
-    vim.api.nvim_buf_set_lines(buf_to_write, i, i, false, formated.lines)
-    i = i + 1
+    formated = format_hex_line(line, formated.buffer, false, format)
+    last_line = formated.buffer
+    local formated_lines_count = #formated.lines
+    vim.api.nvim_buf_set_lines(buf_to_write, i, i + formated_lines_count - 1, false, formated.lines)
+
+    i = i + 1 + formated_lines_count - 1
   end
+
+  formated = format_hex_line(last_line, "", true, format)
+  vim.api.nvim_buf_set_lines(buf_to_write, i, i, false, formated.lines)
 end
 
 return M
