@@ -44,4 +44,29 @@ function M:new(endianness, encoding)
   return obj
 end
 
+---@param start_index integer
+---@param end_index integer
+---@param hex_lines string[]
+---@param format HexerFormatOptions
+function M:write_text_lines(start_index, end_index, hex_lines, format)
+  local octets_count_line = (format.group_of_bytes * format.grouped_bytes_per_row) / 2
+
+  ---@type string[]
+  local text_lines = {}
+
+  for _, value in pairs(hex_lines) do
+    local text_line = value:gsub("%x%x", function(cc)
+      print("cc:", cc)
+      local decimal_char = tonumber(cc, 16)
+      print(decimal_char)
+      print("letter:", string.char(decimal_char))
+      return string.char(decimal_char)
+    end)
+
+    table.insert(text_lines, text_line)
+  end
+
+  -- vim.api.nvim_buf_set_lines(self.id, start_index, end_index, false, text_lines)
+end
+
 return M

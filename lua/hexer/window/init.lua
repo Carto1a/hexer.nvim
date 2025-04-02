@@ -63,4 +63,15 @@ function M:close(force)
   self.rised = false
 end
 
+---@param ... HexerWin
+function M:sync_scroll(...)
+  -- vim.api.nvim_create_autocmd({ "CursorMoved" }, {
+  --   pattern = "*",
+  --   callback = function()
+  --     local cursor_index = vim.api.nvim_win_get_cursor(self.id)
+  --     print(vim.inspect(cursor_index))
+  --   end
+  -- })
+end
+
 return M

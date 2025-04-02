@@ -42,9 +42,11 @@ local function dump_from_buf(buf)
 end
 
 ---@param buf? integer
----@param buf_to_write integer
+---@param buf_hex HexerBufferHex
+---@param buf_address HexerBufferAddress
+---@param buf_text HexerBufferText
 ---@param format HexerFormatOptions
-function M.dump_buf_to(buf, buf_to_write, format)
+function M.dump_buf_to(buf, buf_hex, buf_address, buf_text, format)
   local formater = require("hexer.formater")
 
   buf = buf or 0
@@ -59,13 +61,17 @@ function M.dump_buf_to(buf, buf_to_write, format)
     formated = formater.format_hex_line(line, formated.buffer, false, format)
     last_line = formated.buffer
     local formated_lines_count = #formated.lines
-    vim.api.nvim_buf_set_lines(buf_to_write, i, i + formated_lines_count - 1, false, formated.lines)
+    buf_hex:write_hex_lines(formated.lines, i, i + formated_lines_count - 1)
+    buf_address:write_address(i, i + formated_lines_count - 1, format)
+    buf_text:write_text_lines(i, i + formated_lines_count - 1, formated.lines, format)
 
     i = i + 1 + formated_lines_count - 1
   end
 
   formated = formater.format_hex_line(last_line, "", true, format)
-  vim.api.nvim_buf_set_lines(buf_to_write, i, i, false, formated.lines)
+  buf_hex:write_hex_lines(formated.lines, i, i)
+  buf_address:write_address(i, i, format)
+  buf_text:write_text_lines(i, i, formated.lines, format)
 end
 
 return M

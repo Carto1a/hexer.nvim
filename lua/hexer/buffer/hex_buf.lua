@@ -35,4 +35,8 @@ function M:new(endianness)
   return obj
 end
 
+function M:write_hex_lines(lines, start_index, end_index)
+    vim.api.nvim_buf_set_lines(self.id, start_index, end_index, false, lines)
+end
+
 return M

@@ -1,6 +1,7 @@
 ---@class HexerFormatOptions
 ---@field grouped_bytes_per_row integer
 ---@field group_of_bytes integer
+---@field address_length integer
 
 ---@class HexerConfig
 ---@field format HexerFormatOptions
@@ -24,7 +25,8 @@ local hexer_win_menager = require("hexer.window.manager")
 M.cfg = {
   format = {
     grouped_bytes_per_row = 8,
-    group_of_bytes = 4
+    group_of_bytes = 4,
+    address_length = 6
   }
 }
 
@@ -48,9 +50,11 @@ function M.start_hexer(buf, unload)
   local buf_is_valid = vim.api.nvim_buf_is_valid(buf)
   assert(buf_is_valid, "not a valid buf")
 
-  core.dump_buf_to(buf, buf_hex.id, M.cfg.format)
+  core.dump_buf_to(buf, buf_hex, buf_address, buf_text, M.cfg.format)
 
   hexer_win_menager.start_windows(win_address, win_hex, win_text)
+
+  win_hex:sync_scroll(win_address, win_text)
 
   -- -- TODO: disable "lukas-reineke/indent-blankline.nvim" on text buffer
   -- -- NOTE: ft xxd not work
