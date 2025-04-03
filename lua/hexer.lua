@@ -2,6 +2,8 @@
 ---@field grouped_bytes_per_row integer
 ---@field group_of_bytes integer
 ---@field address_length integer
+---@field endianness endianness
+---@field encoding encoding
 
 ---@class HexerConfig
 ---@field format HexerFormatOptions
@@ -10,67 +12,55 @@
 ---@field cfg HexerConfig
 local M = {}
 
-local utils = require("hexer.utils")
-local core = require("hexer.core")
-
-local hexer_buffer_hex = require("hexer.buffer.hex_buf")
-local hexer_buffer_text = require("hexer.buffer.text_buf")
-local hexer_buffer_address = require("hexer.buffer.address_buf")
-
-local hexer_win_hex = require("hexer.window.hex_win")
-local hexer_win_text = require("hexer.window.text_win")
-local hexer_win_address = require("hexer.window.address_win")
-local hexer_win_menager = require("hexer.window.manager")
-
 M.cfg = {
   format = {
     grouped_bytes_per_row = 8,
     group_of_bytes = 4,
-    address_length = 6
+    address_length = 6,
+    encoding = "ascii",
+    endianness = "big-endian"
   }
 }
 
 local augroup_hexer = vim.api.nvim_create_augroup('hexer', { clear = true })
 
 ---@param buf? integer
----@param unload? boolean
-function M.start_hexer(buf, unload)
+---@param unload_buf boolean
+---@overload fun(buf?: integer)
+function M.start_hexer(buf, unload_buf)
+  unload_buf = unload_buf == nil and true or unload_buf
   buf = buf or 0
-  unload = unload or false
-
-  local buf_hex = hexer_buffer_hex:new("big-endian")
-  local buf_text = hexer_buffer_text:new("big-endian", "ascii")
-  local buf_address = hexer_buffer_address:new()
-
-  local win_hex = hexer_win_hex:new(buf_hex)
-  local win_text = hexer_win_text:new(buf_text)
-  local win_address = hexer_win_address:new(buf_address)
 
   if buf == 0 then buf = vim.api.nvim_get_current_buf() end
   local buf_is_valid = vim.api.nvim_buf_is_valid(buf)
-  assert(buf_is_valid, "not a valid buf")
+  assert(buf_is_valid, "not a valid buffer")
 
-  core.dump_buf_to(buf, buf_hex, buf_address, buf_text, M.cfg.format)
+  local core = require("hexer.core")
+  local session = require("hexer.session")
+  local window_menager = require("hexer.window.manager")
 
-  hexer_win_menager.start_windows(win_address, win_hex, win_text)
-
+  local hex_session = session:new(M.cfg.format)
+  core.assign_session(hex_session)
+  core.dump_buf_to(buf, hex_session, M.cfg.format)
+  window_menager.start_windows(hex_session)
   win_hex:sync_scroll(win_address, win_text)
 
-  -- -- TODO: disable "lukas-reineke/indent-blankline.nvim" on text buffer
-  -- -- NOTE: ft xxd not work
-  -- hexed_buffers:load_buf_settings()
-  --
-  -- vim.api.nvim_buf_delete(current_buf_id, { force = true })
-  -- vim.api.nvim_set_current_buf(hexed_buffers.buf_hex)
+  -- -- -- TODO: disable "lukas-reineke/indent-blankline.nvim" on text buffer
+  -- -- -- NOTE: ft xxd not work
+  -- -- hexed_buffers:load_buf_settings()
+  -- --
+  -- -- vim.api.nvim_buf_delete(current_buf_id, { force = true })
+  -- -- vim.api.nvim_set_current_buf(hexed_buffers.buf_hex)
 end
 
 ---@param force boolean
 function M.stop_hexer(force)
-  
+
 end
 
 function M.suspend_hexer()
-  
+  local core = require("hexer.core")
+  core.suspend_hexer()
 end
 
 -- function M.assemble()
@@ -129,6 +119,13 @@ function M.setup(args)
     save = function()
       print("save")
     end,
+    suspend = function()
+      M.suspend_hexer()
+    end,
+    sessions = function()
+      local core = require("hexer.core")
+      print(vim.inspect(core.sessions))
+    end,
     -- stop = function()
     --   M.assemble()
     -- end,
@@ -153,7 +150,7 @@ function M.setup(args)
   end, {
     nargs = "+",
     complete = function()
-      return { "start", "save", "stop", "search" }
+      return { "start", "save", "stop", "search", "suspend" }
     end
   })
 

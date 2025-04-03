@@ -1,16 +1,18 @@
 local buffer = require("hexer.buffer")
 
 ---@class HexerBufferAddress: HexerBuffer
+---@field private __index any
 local M = setmetatable({}, { __index = buffer })
 M.__index = M
 
+---@private
 function M:__tostring()
   return "HexerBufferAddress"
 end
 
----@return HexerBuffer|HexerBufferAddress
+---@return HexerBufferAddress
 function M:new()
-  ---@type HexerBuffer|HexerBufferAddress
+  ---@type HexerBufferAddress
   local obj = setmetatable(buffer:new(false), self)
 
   return obj

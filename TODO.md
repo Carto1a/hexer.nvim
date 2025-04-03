@@ -1,0 +1,5 @@
+- fazer a parte de navegação
+- não deixar abrir o mesmo buf que tem um arquivo duas vezes?
+- parte de edição
+- parte de salvar
+- parte de fechar

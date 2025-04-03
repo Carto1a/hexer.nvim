@@ -1,3 +1,4 @@
+---@module 'hexer.utils'
 local M = {}
 
 function M.binary_to_hex(command)
@@ -8,10 +9,6 @@ function M.binary_to_hex(command)
   vim.cmd([[%!]] .. command)
 end
 
-function M.hex_to_binary(command)
-
-end
-
 function M.unload_lsp_servers(buf)
   buf = buf or 0
   local attached_servers = vim.lsp.get_clients({ bufnr = buf })
@@ -20,15 +17,14 @@ function M.unload_lsp_servers(buf)
   end
 end
 
-function M.load_lsp_servers(buf)
-  -- TODO: '-'
-end
-
-function M.load_hexer_configs()
-end
-
-function M.unload_hexer_configs()
-  
+function M.generate_uuid()
+  math.randomseed(os.time())
+  local random = math.random
+  local template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+  return string.gsub(template, '[xy]', function(c)
+    local v = (c == 'x') and random(0, 15) or random(8, 11)
+    return string.format('%x', v)
+  end)
 end
 
 return M

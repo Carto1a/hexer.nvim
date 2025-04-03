@@ -1,23 +1,23 @@
 local M = {}
 
----@param address_win HexerWin|HexerWinAddress
----@param hex_win HexerWin|HexerBufferHex
----@param text_win HexerWin|HexerBufferText
-function M.start_windows(address_win, hex_win, text_win)
-
+---@param session HexerSession
+function M.start_windows(session)
   local windows = vim.api.nvim_list_wins()
-  hex_win:rise(true)
+  session.win_hex:rise(true)
 
   for _, win in pairs(windows) do
     local buf = vim.api.nvim_win_get_buf(win)
-    local is_mod = vim.api.nvim_get_option_value("mod", { buf = buf })
+    local is_mod = vim.api.nvim_get_option_value("modified", { buf = buf })
     assert(not is_mod, "can't close modify buffers:", buf)
 
     vim.api.nvim_win_close(win, false)
   end
 
-  text_win:rise()
-  address_win:rise()
+  session.win_text:rise()
+  session.win_address:rise()
+  session.hidden = false
+
+  session.win_hex:sync_scroll({ session.win_address, session.win_text })
 end
 
 return M

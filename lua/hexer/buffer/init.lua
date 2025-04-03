@@ -3,6 +3,7 @@
 local M = {}
 M.__index = M
 
+---@private
 function M:__tostring()
   return "HexerBuffer"
 end
@@ -28,6 +29,7 @@ function M:new(listed)
   obj.id = vim.api.nvim_create_buf(listed, false)
   assert(obj.id, "can't create buf, too bad")
   vim.api.nvim_set_option_value("buftype", "", { buf = obj.id })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = obj.id })
   -- vim.api.nvim_set_option_value("buftype", "acwrite", { buf = obj.id })
 
   return obj

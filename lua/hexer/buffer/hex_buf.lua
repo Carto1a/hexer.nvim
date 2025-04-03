@@ -2,10 +2,12 @@ local buffer = require("hexer.buffer")
 local types = require("hexer.buffer.types")
 
 ---@class HexerBufferHex: HexerBuffer
----@field endianness endianness
+---@field private endianness endianness
+---@field private __index any
 local M = setmetatable({}, { __index = buffer })
 M.__index = M
 
+---@private
 function M:__tostring()
   return "HexerBufferHex"
 end
@@ -18,6 +20,7 @@ local validators = {
   end
 }
 
+---@private
 function M:__newindex(key, value)
   local validator = validators[key]
   if validator then validator(value) end
@@ -25,9 +28,9 @@ function M:__newindex(key, value)
 end
 
 ---@param endianness endianness
----@return HexerBuffer|HexerBufferHex
+---@return HexerBufferHex
 function M:new(endianness)
-  ---@type HexerBuffer|HexerBufferHex
+  ---@type HexerBufferHex
   local obj = setmetatable(buffer:new(true), self)
 
   obj.endianness = endianness or "big-endian"
@@ -36,7 +39,7 @@ function M:new(endianness)
 end
 
 function M:write_hex_lines(lines, start_index, end_index)
-    vim.api.nvim_buf_set_lines(self.id, start_index, end_index, false, lines)
+  vim.api.nvim_buf_set_lines(self.id, start_index, end_index, false, lines)
 end
 
 return M

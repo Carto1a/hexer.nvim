@@ -1,1 +1,13 @@
-{ "lspconfig": { "lua_ls": { "workspace": { "library": [ "." ] }, "internal": { "enabled": true, "vim": { "enabled": true, "plugins": [] } } } } }
+{
+  "lspconfig": {
+    "lua_ls": {
+      "internal": {
+        "enabled": true,
+        "vim": {
+          "enabled": true,
+          "plugins": []
+        }
+      }
+    }
+  }
+}

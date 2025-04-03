@@ -5,9 +5,11 @@ local types = require("hexer.buffer.types")
 ---@field private endianness endianness
 ---@field private encoding encoding
 ---@field private decoder Decoder
+---@field private __index any
 local M = setmetatable({}, { __index = buffer })
 M.__index = M
 
+---@private
 function M:__tostring()
   return "HexerBufferText"
 end
@@ -26,6 +28,7 @@ local validators = {
   end
 }
 
+---@private
 function M:__newindex(key, value)
   local validator = validators[key]
   if validator then validator(value) end
@@ -34,20 +37,25 @@ end
 
 ---@param endianness endianness
 ---@param encoding encoding
----@return HexerBuffer|HexerBufferText
+---@return HexerBufferText
 function M:new(endianness, encoding)
-  local decoders = require("hexer.buffer.decoder_hex")
+  -- local decoders = require("hexer.buffer.decoder_hex")
 
-  ---@type HexerBuffer|HexerBufferText
+  ---@type HexerBufferText
   local obj = setmetatable(buffer:new(false), self)
 
   obj.encoding = encoding or "ascii"
   obj.endianness = endianness or "big-endian"
 
-  local decoder = decoders[encoding]
-  assert(decoders, "invalid decoders, bruh")
-  obj.decoder = decoder
+  -- local decoder = decoders[encoding]
+  -- assert(decoders, "invalid decoders, bruh")
+  -- obj.decoder = decoder
 
+  obj.decoder = {
+    ["decode"] = function(value)
+      return "a"
+    end
+  }
   return obj
 end
 

@@ -8,9 +8,11 @@
 ---@field focusable boolean
 ---@field title string
 ---@field noautocmd boolean
+---@field indetifier? string
 local M = {}
 M.__index = M
 
+---@private
 function M:__tostring()
   return "HexerWinAddress"
 end
@@ -54,21 +56,61 @@ function M:rise(enter)
   assert(self.id, "can't open window for buffer:", self.buf.id, tostring(self.buf))
 
   self.rised = true
+  vim.api.nvim_win_set_var(self.id, "hexer_indetifier", self.indetifier)
 end
 
----@param force boolean?
+-- TODO: não terminaie
+---@param force boolean
+---@overload fun()
 function M:close(force)
-  force = force or false
-  vim.api.nvim_win_close(self.id, force)
+  force = force == nil and false or force
+
+  if vim.api.nvim_win_is_valid(self.id) then
+    vim.api.nvim_win_close(self.id, force)
+    self.rised = false
+    return
+  end
+
   self.rised = false
 end
 
----@param ... HexerWin
-function M:sync_scroll(...)
+---@param windows HexerWin[]
+function M:sync_scroll(windows)
+  ---@param win HexerWin
+  local create_autocmd = function(win)
+    vim.api.nvim_create_autocmd({ "CursorMoved" }, {
+      pattern = "*",
+      callback = function()
+        local current_win_id = vim.api.nvim_get_current_win()
+        if current_win_id == win.id then
+          print("movendo o cursor na janela do id:", win.id)
+        end
+      end
+    })
+  end
+
+  create_autocmd(self)
+  for _, win in pairs(windows) do
+    create_autocmd(win)
+  end
+
   -- vim.api.nvim_create_autocmd({ "CursorMoved" }, {
   --   pattern = "*",
   --   callback = function()
-  --     local cursor_index = vim.api.nvim_win_get_cursor(self.id)
+  --     local find_window = function()
+  --       local current_win_id = vim.api.nvim_get_current_win()
+  --       for _, win in pairs(windows) do
+  --         if win.id == current_win_id then
+  --           return win
+  --         end
+  --       end
+  --     end
+  --
+  --     local win = find_window()
+  --     local cursor_index = vim.api.nvim_win_get_cursor(win.id)
+  --
+  --
+  --
   --     print(vim.inspect(cursor_index))
   --   end
   -- })

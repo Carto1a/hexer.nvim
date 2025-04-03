@@ -1,5 +1,13 @@
----@class Hexer
-local M = {}
+---@class HexerCore
+---@field sessions { [string]: HexerSession }
+local M = {
+  sessions = {}
+}
+
+---@param session HexerSession
+function M.assign_session(session)
+  M.sessions[session.win_hex.indetifier] = session
+end
 
 ---@param path string
 ---@return string
@@ -42,12 +50,18 @@ local function dump_from_buf(buf)
 end
 
 ---@param buf? integer
----@param buf_hex HexerBufferHex
----@param buf_address HexerBufferAddress
----@param buf_text HexerBufferText
+---@param session HexerSession
 ---@param format HexerFormatOptions
-function M.dump_buf_to(buf, buf_hex, buf_address, buf_text, format)
+function M.dump_buf_to(buf, session, format)
+  assert(session)
   local formater = require("hexer.formater")
+
+  local buf_hex = session.win_hex.buf
+  local buf_address = session.win_address.buf
+  local buf_text = session.win_text.buf
+  ---@cast buf_hex HexerBufferHex
+  ---@cast buf_address HexerBufferAddress
+  ---@cast buf_text HexerBufferText
 
   buf = buf or 0
 
@@ -57,6 +71,10 @@ function M.dump_buf_to(buf, buf_hex, buf_address, buf_text, format)
   ---@type HexerFormatHexLineReturn
   local formated = { lines = {}, buffer = "" }
   local last_line = ""
+
+  vim.api.nvim_set_option_value("modifiable", true, { buf = buf_hex.id })
+  vim.api.nvim_set_option_value("modifiable", true, { buf = buf_address.id })
+  vim.api.nvim_set_option_value("modifiable", true, { buf = buf_text.id })
 
   -- NOTE: fazer a parte de formatação como uma pipeline? querbra as linhas,
   -- separa, formata etc
@@ -79,6 +97,68 @@ function M.dump_buf_to(buf, buf_hex, buf_address, buf_text, format)
   buf_address:set_modify(false)
   buf_hex:set_modify(false)
   buf_text:set_modify(false)
+
+  vim.api.nvim_set_option_value("modifiable", false, { buf = buf_hex.id })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = buf_address.id })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = buf_text.id })
+
+  session.loaded = true
+end
+
+---@return HexerSession?
+---@overload fun(ids: integer[]): HexerSession?
+function M.get_current_session()
+  local windows_id = vim.api.nvim_list_wins()
+
+  for _, window_id in pairs(windows_id) do
+    local sucess, indetifier = pcall(vim.api.nvim_win_get_var, window_id, "hexer_indetifier")
+    if not sucess or not indetifier then goto continue end
+    ---@cast indetifier string
+
+    local session = M.sessions[indetifier]
+    if session then
+      return session
+    end
+
+    ::continue::
+  end
+
+  return nil
+end
+
+---@param hexer_indetifier string
+---@overload fun()
+function M.suspend_hexer(hexer_indetifier)
+  ---@type HexerSession?
+  local session = nil
+  if not hexer_indetifier then
+    session = M.get_current_session()
+  else
+    session = M.sessions[hexer_indetifier]
+  end
+
+  if not session then
+    print("no hexer stated")
+    return
+  end
+
+  local dummy_buf = vim.api.nvim_create_buf(true, true)
+  vim.api.nvim_open_win(dummy_buf, true, { split = "left" })
+
+  session.win_address:close(true)
+  session.win_text:close(true)
+  session.win_hex:close(true)
+end
+
+---@param hexer_indetifier string
+---@overload fun()
+function M.close_hexer(hexer_indetifier)
+  local session = nil
+  if hexer_indetifier then
+    session = M.get_current_session()
+  else
+    session = M.sessions[hexer_indetifier]
+  end
 end
 
 return M
