@@ -43,3 +43,5 @@ luac.out
 /lua.bat
 /lua_modules
 /.luarocks
+/luarocks
+/lua
