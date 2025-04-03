@@ -2,8 +2,9 @@ local buffer = require("hexer.buffer")
 local types = require("hexer.buffer.types")
 
 ---@class HexerBufferText: HexerBuffer
----@field endianness endianness
----@field encoding encoding
+---@field private endianness endianness
+---@field private encoding encoding
+---@field private decoder Decoder
 local M = setmetatable({}, { __index = buffer })
 M.__index = M
 
@@ -35,11 +36,17 @@ end
 ---@param encoding encoding
 ---@return HexerBuffer|HexerBufferText
 function M:new(endianness, encoding)
+  local decoders = require("hexer.buffer.decoder_hex")
+
   ---@type HexerBuffer|HexerBufferText
   local obj = setmetatable(buffer:new(false), self)
 
   obj.encoding = encoding or "ascii"
   obj.endianness = endianness or "big-endian"
+
+  local decoder = decoders[encoding]
+  assert(decoders, "invalid decoders, bruh")
+  obj.decoder = decoder
 
   return obj
 end
@@ -55,18 +62,11 @@ function M:write_text_lines(start_index, end_index, hex_lines, format)
   local text_lines = {}
 
   for _, value in pairs(hex_lines) do
-    local text_line = value:gsub("%x%x", function(cc)
-      print("cc:", cc)
-      local decimal_char = tonumber(cc, 16)
-      print(decimal_char)
-      print("letter:", string.char(decimal_char))
-      return string.char(decimal_char)
-    end)
-
+    local text_line = self.decoder.decode(value)
     table.insert(text_lines, text_line)
   end
 
-  -- vim.api.nvim_buf_set_lines(self.id, start_index, end_index, false, text_lines)
+  vim.api.nvim_buf_set_lines(self.id, start_index, end_index, false, text_lines)
 end
 
 return M

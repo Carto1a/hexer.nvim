@@ -33,4 +33,10 @@ function M:new(listed)
   return obj
 end
 
+---@param state boolean
+function M:set_modify(state)
+  assert(state ~= nil, "set_modify arg error")
+  vim.api.nvim_set_option_value("modified", state, { buf = self.id })
+end
+
 return M

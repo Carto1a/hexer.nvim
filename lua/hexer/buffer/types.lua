@@ -1,5 +1,5 @@
 ---@alias endianness "big-endian" | "little-endian"
----@alias encoding "ascii" | "utf-8"
+---@alias encoding "ascii" | "utf-8" | "utf-16"
 
 local M = {}
 

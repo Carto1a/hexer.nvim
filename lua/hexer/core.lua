@@ -57,6 +57,9 @@ function M.dump_buf_to(buf, buf_hex, buf_address, buf_text, format)
   ---@type HexerFormatHexLineReturn
   local formated = { lines = {}, buffer = "" }
   local last_line = ""
+
+  -- NOTE: fazer a parte de formatação como uma pipeline? querbra as linhas,
+  -- separa, formata etc
   for line in dump:gmatch("[^\r\n]+") do
     formated = formater.format_hex_line(line, formated.buffer, false, format)
     last_line = formated.buffer
@@ -72,6 +75,10 @@ function M.dump_buf_to(buf, buf_hex, buf_address, buf_text, format)
   buf_hex:write_hex_lines(formated.lines, i, i)
   buf_address:write_address(i, i, format)
   buf_text:write_text_lines(i, i, formated.lines, format)
+
+  buf_address:set_modify(false)
+  buf_hex:set_modify(false)
+  buf_text:set_modify(false)
 end
 
 return M

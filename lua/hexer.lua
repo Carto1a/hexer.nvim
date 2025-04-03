@@ -64,44 +64,53 @@ function M.start_hexer(buf, unload)
   -- vim.api.nvim_set_current_buf(hexed_buffers.buf_hex)
 end
 
-function M.assemble()
-  vim.bo.bin = false
-  vim.b['hexer'] = false
-  vim.bo.ft = vim.b.bin_ft
-  vim.bo.mod = false
-
-  -- TODO: voltar com a config de spell do buffer
-  -- TODO: voltar com as lsp
-
-  local undolevels = vim.o.undolevels
-  vim.o.undolevels = -1
-  vim.cmd([[exe "normal a \<BS>\<Esc>"]])
-  vim.o.undolevels = undolevels
-
-  vim.api.nvim_command("e!")
+---@param force boolean
+function M.stop_hexer(force)
+  
 end
 
-function M.save()
-
+function M.suspend_hexer()
+  
 end
 
-local function setup_autocmds()
-  local autocmd = vim.api.nvim_create_autocmd
+-- function M.assemble()
+--   vim.bo.bin = false
+--   vim.b['hexer'] = false
+--   vim.bo.ft = vim.b.bin_ft
+--   vim.bo.mod = false
+--
+--   -- TODO: voltar com a config de spell do buffer
+--   -- TODO: voltar com as lsp
+--
+--   local undolevels = vim.o.undolevels
+--   vim.o.undolevels = -1
+--   vim.cmd([[exe "normal a \<BS>\<Esc>"]])
+--   vim.o.undolevels = undolevels
+--
+--   vim.api.nvim_command("e!")
+-- end
 
-  autocmd({ "BufWriteCmd" }, {
-    group = augroup_hexer,
-    pattern = "*",
-    callback = function(event)
-      if not vim.b.hexer then
-        vim.cmd("write")
-        return
-      end
+-- function M.save()
+--
+-- end
 
-      vim.api.nvim_command("silent w !xxd -r > " .. event.file)
-      vim.bo.mod = false
-    end
-  })
-end
+-- local function setup_autocmds()
+--   local autocmd = vim.api.nvim_create_autocmd
+--
+--   autocmd({ "BufWriteCmd" }, {
+--     group = augroup_hexer,
+--     pattern = "*",
+--     callback = function(event)
+--       if not vim.b.hexer then
+--         vim.cmd("write")
+--         return
+--       end
+--
+--       vim.api.nvim_command("silent w !xxd -r > " .. event.file)
+--       vim.bo.mod = false
+--     end
+--   })
+-- end
 
 function M.setup(args)
   if not vim.fn.executable("xxd") then
@@ -120,9 +129,9 @@ function M.setup(args)
     save = function()
       print("save")
     end,
-    stop = function()
-      M.assemble()
-    end,
+    -- stop = function()
+    --   M.assemble()
+    -- end,
     search = function(cmd_args)
       print("search")
       print("args: " .. vim.inspect(cmd_args))
@@ -148,7 +157,7 @@ function M.setup(args)
     end
   })
 
-  setup_autocmds();
+  -- setup_autocmds();
 end
 
 return M
