@@ -17,7 +17,7 @@ function M:__tostring()
   return "HexerWinAddress"
 end
 
----@return HexerWin
+---@protected
 ---@param position win_position
 ---@param buf HexerBuffer
 ---@param min_width integer
@@ -25,6 +25,7 @@ end
 ---@param focusable boolean
 ---@param title string
 ---@param noautocmd boolean
+---@return HexerWin
 function M:new(position, buf, min_width, width, focusable, title, noautocmd)
   ---@type HexerWin
   local obj = setmetatable({}, self)
@@ -45,6 +46,8 @@ end
 function M:rise(enter)
   enter = enter or false
 
+  local namespace = require("hexer.core").namespace
+
   self.id = vim.api.nvim_open_win(self.buf.id, enter,
     {
       width = self.width,
@@ -57,6 +60,7 @@ function M:rise(enter)
 
   self.rised = true
   vim.api.nvim_win_set_var(self.id, "hexer_indetifier", self.indetifier)
+  vim.api.nvim_win_set_hl_ns(self.id, namespace)
 end
 
 -- TODO: não terminaie
@@ -72,48 +76,6 @@ function M:close(force)
   end
 
   self.rised = false
-end
-
----@param windows HexerWin[]
-function M:sync_scroll(windows)
-  ---@param win HexerWin
-  local create_autocmd = function(win)
-    vim.api.nvim_create_autocmd({ "CursorMoved" }, {
-      pattern = "*",
-      callback = function()
-        local current_win_id = vim.api.nvim_get_current_win()
-        if current_win_id == win.id then
-          print("movendo o cursor na janela do id:", win.id)
-        end
-      end
-    })
-  end
-
-  create_autocmd(self)
-  for _, win in pairs(windows) do
-    create_autocmd(win)
-  end
-
-  -- vim.api.nvim_create_autocmd({ "CursorMoved" }, {
-  --   pattern = "*",
-  --   callback = function()
-  --     local find_window = function()
-  --       local current_win_id = vim.api.nvim_get_current_win()
-  --       for _, win in pairs(windows) do
-  --         if win.id == current_win_id then
-  --           return win
-  --         end
-  --       end
-  --     end
-  --
-  --     local win = find_window()
-  --     local cursor_index = vim.api.nvim_win_get_cursor(win.id)
-  --
-  --
-  --
-  --     print(vim.inspect(cursor_index))
-  --   end
-  -- })
 end
 
 return M

@@ -42,8 +42,9 @@ function M.start_hexer(buf, unload_buf)
   local hex_session = session:new(M.cfg.format)
   core.assign_session(hex_session)
   core.dump_buf_to(buf, hex_session, M.cfg.format)
+
   window_menager.start_windows(hex_session)
-  win_hex:sync_scroll(win_address, win_text)
+  window_menager.sync_scroll(hex_session)
 
   -- -- -- TODO: disable "lukas-reineke/indent-blankline.nvim" on text buffer
   -- -- -- NOTE: ft xxd not work
@@ -111,6 +112,8 @@ function M.setup(args)
 
     return
   end
+
+  require("hexer.core").setup()
 
   local commands = {
     start = function()

@@ -39,7 +39,7 @@ end
 ---@param encoding encoding
 ---@return HexerBufferText
 function M:new(endianness, encoding)
-  -- local decoders = require("hexer.buffer.decoder_hex")
+  local decoders = require("hexer.buffer.decoder_hex")
 
   ---@type HexerBufferText
   local obj = setmetatable(buffer:new(false), self)
@@ -47,15 +47,10 @@ function M:new(endianness, encoding)
   obj.encoding = encoding or "ascii"
   obj.endianness = endianness or "big-endian"
 
-  -- local decoder = decoders[encoding]
-  -- assert(decoders, "invalid decoders, bruh")
-  -- obj.decoder = decoder
+  local decoder = decoders[encoding]
+  assert(decoders, "invalid decoders, bruh")
+  obj.decoder = decoder
 
-  obj.decoder = {
-    ["decode"] = function(value)
-      return "a"
-    end
-  }
   return obj
 end
 
