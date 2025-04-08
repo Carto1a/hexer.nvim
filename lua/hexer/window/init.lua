@@ -86,7 +86,8 @@ function M:rise(enter)
   vim.api.nvim_win_set_hl_ns(self.id, namespace)
 end
 
--- TODO: não terminaie
+-- TODO: não terminei, esqueci oq eu não terminei kk :)
+
 ---@param force boolean
 ---@overload fun()
 function M:close(force)

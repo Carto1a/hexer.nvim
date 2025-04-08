@@ -21,6 +21,8 @@ local validators = {
   end
 }
 
+--- NOTE: tenho que colocar na matatable para funfar?
+
 ---@private
 function M:__newindex(key, value)
   local validator = validators[key]
