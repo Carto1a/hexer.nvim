@@ -63,32 +63,22 @@ function M:hl(row, col)
       })
   end
 
-  -- NOTE: passou do group_of_bytes pula 1
+  local group_more_space = format.group_of_bytes + 1
+  local group_index = (col + 1) / group_more_space
+  local is_float = group_index % 1 ~= 0
 
-  -- local line = vim.api.nvim_buf_get_lines(self.id, row - 1, row, false)[1]
-  -- if not line then return end
-  --
-  -- local line_no_space = line:gsub("%s", "")
-  -- print(line_no_space)
-  --
-  -- -- local pair = bit.band(col + 1, 1)
-  -- --
-  -- -- local group_more_space = format.group_of_bytes + 1
-  -- -- local group_index = (col + 1) / group_more_space
-  -- -- local is_float = group_index % 1 ~= 0
-  -- --
-  -- -- if not is_float then
-  -- --   vim.api.nvim_buf_del_extmark(self.id, namespace, self.cursor_hl)
-  -- --   return
-  -- -- end
-  -- --
-  -- -- if pair == 1 then
-  -- --   print("par")
-  -- --   hl_octet(col, col + 2)
-  -- -- else
-  -- --   print("impar")
-  -- --   hl_octet(col - 1, col + 1)
-  -- -- end
+  local pair = bit.band(col + 1 - math.floor(group_index), 1)
+
+  if not is_float then
+    vim.api.nvim_buf_del_extmark(self.id, namespace, self.cursor_hl)
+    return
+  end
+
+  if pair == 1 then
+    hl_octet(col, col + 2)
+  else
+    hl_octet(col - 1, col + 1)
+  end
 end
 
 function M:write_hex_lines(lines, start_index, end_index)

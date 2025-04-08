@@ -15,9 +15,7 @@ function M.sync_scroll(session)
           goto continue
         end
 
-        print("movendo o cursor na janela do id:", win.id)
         local cursor_pos = vim.api.nvim_win_get_cursor(current_win_id)
-        print("cursor", vim.inspect(cursor_pos))
 
         win:move_cursor(cursor_pos, session)
 
@@ -44,7 +42,7 @@ function M.start_windows(session)
   session.win_address:rise()
   session.hidden = false
 
-  M.sync_scroll(session.win_hex, session.win_address, session.win_text)
+  M.sync_scroll(session)
 end
 
 return M

@@ -25,13 +25,17 @@ function M:move_cursor(cursor_pos, session)
   assert(session)
   self.buf:hl(cursor_pos[1], cursor_pos[2])
 
-  local address_cursor = vim.api.nvim_win_get_cursor(session.win_address.id)
-  local text_cursor = vim.api.nvim_win_get_cursor(session.win_text.id)
+  local address_cursor = session.win_address:get_cursor()
+  local text_cursor = session.win_text:get_cursor()
 
-  vim.api.nvim_win_set_cursor(session.win_address.id, { cursor_pos[1], address_cursor[2] })
-  vim.api.nvim_win_set_cursor(session.win_text.id, { cursor_pos[1], text_cursor[2] })
+  if address_cursor then
+    session.win_address:set_cursor(cursor_pos[1], address_cursor[2])
+  end
 
-  session.win_text:hl(cursor_pos)
+  if text_cursor then
+    session.win_text:set_cursor(cursor_pos[1], text_cursor[2])
+    session.win_text.buf:hl(cursor_pos[1], cursor_pos[2])
+  end
 end
 
 return M

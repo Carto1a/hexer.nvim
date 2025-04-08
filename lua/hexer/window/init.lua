@@ -1,5 +1,5 @@
 ---@class HexerWin
----@field id integer
+---@field id? integer
 ---@field rised boolean
 ---@field position win_position
 ---@field buf HexerBuffer
@@ -9,12 +9,34 @@
 ---@field title string
 ---@field noautocmd boolean
 ---@field indetifier? string
+---@field close_action? fun()
 local M = {}
 M.__index = M
 
 ---@private
 function M:__tostring()
-  return "HexerWinAddress"
+  return "HexerWin"
+end
+
+---@private
+function M:setup_pre_close_event()
+  assert(self.id)
+  vim.api.nvim_create_autocmd("WinClosed", {
+    pattern = tostring(self.id),
+    callback = function(event)
+      if event.match ~= tostring(self.id) then return end
+
+      self.rised = false
+      self.id = nil
+
+      if self.close_action then
+        self:close_action()
+      end
+
+      -- remove autocmd
+      return true
+    end
+  })
 end
 
 ---@protected
@@ -59,6 +81,7 @@ function M:rise(enter)
   assert(self.id, "can't open window for buffer:", self.buf.id, tostring(self.buf))
 
   self.rised = true
+  self:setup_pre_close_event()
   vim.api.nvim_win_set_var(self.id, "hexer_indetifier", self.indetifier)
   vim.api.nvim_win_set_hl_ns(self.id, namespace)
 end
@@ -71,11 +94,41 @@ function M:close(force)
 
   if vim.api.nvim_win_is_valid(self.id) then
     vim.api.nvim_win_close(self.id, force)
-    self.rised = false
     return
   end
 
   self.rised = false
+end
+
+---@param throw? boolean
+---@return integer[]?
+function M:get_cursor(throw)
+  throw = throw == nil and false or throw
+  ---@cast throw boolean
+
+  if not self.rised then
+    if throw then assert(self.rised, "can't set cursor for a closed windows") end
+    return nil
+  end
+
+  assert(self.id, "internal error, windows id not set")
+
+  return vim.api.nvim_win_get_cursor(self.id)
+end
+
+---@param throw? boolean
+function M:set_cursor(col, row, throw)
+  throw = throw == nil and false or throw
+  ---@cast throw boolean
+
+  if not self.rised then
+    if throw then assert(self.rised, "can't set cursor for a closed windows") end
+    return
+  end
+
+  assert(self.id, "internal error, windows id not set")
+
+  vim.api.nvim_win_set_cursor(self.id, { col, row })
 end
 
 return M
