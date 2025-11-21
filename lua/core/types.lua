@@ -1,0 +1,2 @@
+---@alias endianness "big-endian" | "little-endian"
+---@alias encoding "ascii" | "utf-8" | "utf-16"
