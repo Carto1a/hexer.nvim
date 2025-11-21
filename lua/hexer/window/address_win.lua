@@ -19,4 +19,23 @@ function M:new(buf)
   return obj
 end
 
+---@param cursor_pos integer[]
+---@param session HexerSession
+function M:move_cursor(cursor_pos, session)
+  assert(session)
+
+  local hex_cursor = session.win_hex:get_cursor()
+  local text_cursor = session.win_text:get_cursor()
+
+  if hex_cursor then
+    session.win_hex:set_cursor(cursor_pos[1], hex_cursor[2])
+    session.win_hex.buf:hl(cursor_pos[1], hex_cursor[2])
+  end
+
+  if text_cursor then
+    session.win_text:set_cursor(cursor_pos[1], text_cursor[2])
+    session.win_text.buf:hl(cursor_pos[1], cursor_pos[2])
+  end
+end
+
 return M

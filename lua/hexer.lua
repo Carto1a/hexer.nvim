@@ -28,29 +28,29 @@ local augroup_hexer = vim.api.nvim_create_augroup('hexer', { clear = true })
 ---@param unload_buf boolean
 ---@overload fun(buf?: integer)
 function M.start_hexer(buf, unload_buf)
-  unload_buf = unload_buf == nil and true or unload_buf
-  buf = buf or 0
-
-  if buf == 0 then buf = vim.api.nvim_get_current_buf() end
-  local buf_is_valid = vim.api.nvim_buf_is_valid(buf)
-  assert(buf_is_valid, "not a valid buffer")
-
-  local core = require("hexer.core")
-  local session = require("hexer.session")
-  local window_menager = require("hexer.window.manager")
-
-  local hex_session = session:new(M.cfg.format)
-  core.assign_session(hex_session)
-  core.dump_buf_to(buf, hex_session, M.cfg.format)
-  window_menager.start_windows(hex_session)
-  win_hex:sync_scroll(win_address, win_text)
-
-  -- -- -- TODO: disable "lukas-reineke/indent-blankline.nvim" on text buffer
-  -- -- -- NOTE: ft xxd not work
-  -- -- hexed_buffers:load_buf_settings()
-  -- --
-  -- -- vim.api.nvim_buf_delete(current_buf_id, { force = true })
-  -- -- vim.api.nvim_set_current_buf(hexed_buffers.buf_hex)
+  -- unload_buf = unload_buf == nil and true or unload_buf
+  -- buf = buf or 0
+  --
+  -- if buf == 0 then buf = vim.api.nvim_get_current_buf() end
+  -- local buf_is_valid = vim.api.nvim_buf_is_valid(buf)
+  -- assert(buf_is_valid, "not a valid buffer")
+  --
+  -- local core = require("hexer.core")
+  -- local session = require("hexer.session")
+  -- local window_menager = require("hexer.window.manager")
+  --
+  -- local hex_session = session:new(M.cfg.format)
+  -- core.assign_session(hex_session)
+  -- core.dump_buf_to(buf, hex_session, M.cfg.format)
+  --
+  -- window_menager.start_windows(hex_session)
+  --
+  -- -- -- -- TODO: disable "lukas-reineke/indent-blankline.nvim" on text buffer
+  -- -- -- -- NOTE: ft xxd not work
+  -- -- -- hexed_buffers:load_buf_settings()
+  -- -- --
+  -- -- -- vim.api.nvim_buf_delete(current_buf_id, { force = true })
+  -- -- -- vim.api.nvim_set_current_buf(hexed_buffers.buf_hex)
 end
 
 ---@param force boolean
@@ -59,8 +59,8 @@ function M.stop_hexer(force)
 end
 
 function M.suspend_hexer()
-  local core = require("hexer.core")
-  core.suspend_hexer()
+  -- local core = require("hexer.core")
+  -- core.suspend_hexer()
 end
 
 -- function M.assemble()
@@ -112,49 +112,25 @@ function M.setup(args)
     return
   end
 
-  local commands = {
-    start = function()
-      M.start_hexer()
-    end,
-    save = function()
-      print("save")
-    end,
-    suspend = function()
-      M.suspend_hexer()
-    end,
-    sessions = function()
-      local core = require("hexer.core")
-      print(vim.inspect(core.sessions))
-    end,
-    -- stop = function()
-    --   M.assemble()
-    -- end,
-    search = function(cmd_args)
-      print("search")
-      print("args: " .. vim.inspect(cmd_args))
-    end,
-    test = function(cmd_args)
-      vim.api.nvim_open_win(0, false,
-        { split = 'left', width = 20, style = "minimal" })
-    end
-  }
+  require("hexer.core").setup()
 
   M.cfg = vim.tbl_deep_extend("force", M.cfg, args or {})
 
   vim.api.nvim_create_user_command("Hexer", function(opts)
-    local command_args = opts.fargs
-    local command = commands[command_args[1]]
-    if command then
-      command(vim.list_slice(command_args, 2));
-    end
-  end, {
-    nargs = "+",
-    complete = function()
-      return { "start", "save", "stop", "search", "suspend" }
-    end
-  })
+    local t = require("hexer.commands")
 
-  -- setup_autocmds();
+    print(t.commands.sava)
+
+
+    -- local command_args = opts.fargs
+    -- local command = require("hexer.commands").commands[command_args[1]]
+    -- if command then
+    --   command(vim.list_slice(command_args, 2));
+    -- end
+  end, {
+    nargs = "*",
+    complete = require("hexer.commands").complete
+  })
 end
 
 return M

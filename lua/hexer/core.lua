@@ -1,8 +1,14 @@
 ---@class HexerCore
 ---@field sessions { [string]: HexerSession }
-local M = {
-  sessions = {}
-}
+---@field namespace integer
+local M = {}
+
+function M.setup()
+  M.sessions = {}
+  M.namespace = vim.api.nvim_create_namespace("Hexer")
+
+  require("hexer.highlights").setup(M.namespace)
+end
 
 ---@param session HexerSession
 function M.assign_session(session)
@@ -82,10 +88,16 @@ function M.dump_buf_to(buf, session, format)
     formated = formater.format_hex_line(line, formated.buffer, false, format)
     last_line = formated.buffer
     local formated_lines_count = #formated.lines
+
+    if #formated.lines < 1 then
+      goto continue
+    end
+
     buf_hex:write_hex_lines(formated.lines, i, i + formated_lines_count - 1)
     buf_address:write_address(i, i + formated_lines_count - 1, format)
     buf_text:write_text_lines(i, i + formated_lines_count - 1, formated.lines, format)
 
+    ::continue::
     i = i + 1 + formated_lines_count - 1
   end
 

@@ -1,5 +1,5 @@
 ---@class HexerWin
----@field id integer
+---@field id? integer
 ---@field rised boolean
 ---@field position win_position
 ---@field buf HexerBuffer
@@ -9,15 +9,37 @@
 ---@field title string
 ---@field noautocmd boolean
 ---@field indetifier? string
+---@field close_action? fun()
 local M = {}
 M.__index = M
 
 ---@private
 function M:__tostring()
-  return "HexerWinAddress"
+  return "HexerWin"
 end
 
----@return HexerWin
+---@private
+function M:setup_pre_close_event()
+  assert(self.id)
+  vim.api.nvim_create_autocmd("WinClosed", {
+    pattern = tostring(self.id),
+    callback = function(event)
+      if event.match ~= tostring(self.id) then return end
+
+      self.rised = false
+      self.id = nil
+
+      if self.close_action then
+        self:close_action()
+      end
+
+      -- remove autocmd
+      return true
+    end
+  })
+end
+
+---@protected
 ---@param position win_position
 ---@param buf HexerBuffer
 ---@param min_width integer
@@ -25,6 +47,7 @@ end
 ---@param focusable boolean
 ---@param title string
 ---@param noautocmd boolean
+---@return HexerWin
 function M:new(position, buf, min_width, width, focusable, title, noautocmd)
   ---@type HexerWin
   local obj = setmetatable({}, self)
@@ -45,6 +68,8 @@ end
 function M:rise(enter)
   enter = enter or false
 
+  local namespace = require("hexer.core").namespace
+
   self.id = vim.api.nvim_open_win(self.buf.id, enter,
     {
       width = self.width,
@@ -56,10 +81,13 @@ function M:rise(enter)
   assert(self.id, "can't open window for buffer:", self.buf.id, tostring(self.buf))
 
   self.rised = true
+  self:setup_pre_close_event()
   vim.api.nvim_win_set_var(self.id, "hexer_indetifier", self.indetifier)
+  vim.api.nvim_win_set_hl_ns(self.id, namespace)
 end
 
--- TODO: não terminaie
+-- TODO: não terminei, esqueci oq eu não terminei kk :)
+
 ---@param force boolean
 ---@overload fun()
 function M:close(force)
@@ -67,53 +95,41 @@ function M:close(force)
 
   if vim.api.nvim_win_is_valid(self.id) then
     vim.api.nvim_win_close(self.id, force)
-    self.rised = false
     return
   end
 
   self.rised = false
 end
 
----@param windows HexerWin[]
-function M:sync_scroll(windows)
-  ---@param win HexerWin
-  local create_autocmd = function(win)
-    vim.api.nvim_create_autocmd({ "CursorMoved" }, {
-      pattern = "*",
-      callback = function()
-        local current_win_id = vim.api.nvim_get_current_win()
-        if current_win_id == win.id then
-          print("movendo o cursor na janela do id:", win.id)
-        end
-      end
-    })
+---@param throw? boolean
+---@return integer[]?
+function M:get_cursor(throw)
+  throw = throw == nil and false or throw
+  ---@cast throw boolean
+
+  if not self.rised then
+    if throw then assert(self.rised, "can't set cursor for a closed windows") end
+    return nil
   end
 
-  create_autocmd(self)
-  for _, win in pairs(windows) do
-    create_autocmd(win)
+  assert(self.id, "internal error, windows id not set")
+
+  return vim.api.nvim_win_get_cursor(self.id)
+end
+
+---@param throw? boolean
+function M:set_cursor(col, row, throw)
+  throw = throw == nil and false or throw
+  ---@cast throw boolean
+
+  if not self.rised then
+    if throw then assert(self.rised, "can't set cursor for a closed windows") end
+    return
   end
 
-  -- vim.api.nvim_create_autocmd({ "CursorMoved" }, {
-  --   pattern = "*",
-  --   callback = function()
-  --     local find_window = function()
-  --       local current_win_id = vim.api.nvim_get_current_win()
-  --       for _, win in pairs(windows) do
-  --         if win.id == current_win_id then
-  --           return win
-  --         end
-  --       end
-  --     end
-  --
-  --     local win = find_window()
-  --     local cursor_index = vim.api.nvim_win_get_cursor(win.id)
-  --
-  --
-  --
-  --     print(vim.inspect(cursor_index))
-  --   end
-  -- })
+  assert(self.id, "internal error, windows id not set")
+
+  vim.api.nvim_win_set_cursor(self.id, { col, row })
 end
 
 return M

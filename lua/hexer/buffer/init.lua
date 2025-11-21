@@ -1,5 +1,6 @@
 ---@class HexerBuffer
 ---@field id integer
+---@field hl fun(self: HexerBuffer, row: integer, col: integer)
 local M = {}
 M.__index = M
 
@@ -22,6 +23,7 @@ end
 ---@return HexerBuffer
 function M:new(listed)
   listed = listed or true
+
 
   ---@type HexerBuffer
   local obj = setmetatable({}, self)

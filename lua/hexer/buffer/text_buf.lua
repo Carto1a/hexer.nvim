@@ -5,6 +5,7 @@ local types = require("hexer.buffer.types")
 ---@field private endianness endianness
 ---@field private encoding encoding
 ---@field private decoder Decoder
+---@field private cursor_hl integer
 ---@field private __index any
 local M = setmetatable({}, { __index = buffer })
 M.__index = M
@@ -39,7 +40,7 @@ end
 ---@param encoding encoding
 ---@return HexerBufferText
 function M:new(endianness, encoding)
-  -- local decoders = require("hexer.buffer.decoder_hex")
+  local decoders = require("hexer.buffer.decoder_hex")
 
   ---@type HexerBufferText
   local obj = setmetatable(buffer:new(false), self)
@@ -47,15 +48,10 @@ function M:new(endianness, encoding)
   obj.encoding = encoding or "ascii"
   obj.endianness = endianness or "big-endian"
 
-  -- local decoder = decoders[encoding]
-  -- assert(decoders, "invalid decoders, bruh")
-  -- obj.decoder = decoder
+  local decoder = decoders[encoding]
+  assert(decoders, "invalid decoders, bruh")
+  obj.decoder = decoder
 
-  obj.decoder = {
-    ["decode"] = function(value)
-      return "a"
-    end
-  }
   return obj
 end
 
@@ -75,6 +71,26 @@ function M:write_text_lines(start_index, end_index, hex_lines, format)
   end
 
   vim.api.nvim_buf_set_lines(self.id, start_index, end_index, false, text_lines)
+end
+
+---@param row integer
+---@param col integer
+function M:hl(row, col)
+  local namespace = require("hexer.core").namespace
+  local format = require("hexer").cfg.format
+
+  local hl_char = function(col_pos)
+    vim.api.nvim_buf_set_extmark(
+      self.id,
+      namespace,
+      row - 1,
+      col_pos,
+      {
+        id = self.cursor_hl,
+        hl_group = "HexerBufferHexOctet",
+        end_col = col_pos,
+      })
+  end
 end
 
 return M

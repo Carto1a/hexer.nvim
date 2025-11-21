@@ -1,6 +1,31 @@
 local M = {}
 
 ---@param session HexerSession
+function M.sync_scroll(session)
+  assert(session)
+
+  local windows = { session.win_hex, session.win_address, session.win_text }
+
+  vim.api.nvim_create_autocmd({ "CursorMoved" }, {
+    pattern = "*",
+    callback = function()
+      local current_win_id = vim.api.nvim_get_current_win()
+      for _, win in pairs(windows) do
+        if current_win_id ~= win.id then
+          goto continue
+        end
+
+        local cursor_pos = vim.api.nvim_win_get_cursor(current_win_id)
+
+        win:move_cursor(cursor_pos, session)
+
+        ::continue::
+      end
+    end
+  })
+end
+
+---@param session HexerSession
 function M.start_windows(session)
   local windows = vim.api.nvim_list_wins()
   session.win_hex:rise(true)
@@ -17,7 +42,7 @@ function M.start_windows(session)
   session.win_address:rise()
   session.hidden = false
 
-  session.win_hex:sync_scroll({ session.win_address, session.win_text })
+  M.sync_scroll(session)
 end
 
 return M
