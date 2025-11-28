@@ -53,11 +53,6 @@ function M.start_hexer(buf, unload_buf)
   -- -- -- vim.api.nvim_set_current_buf(hexed_buffers.buf_hex)
 end
 
----@param force boolean
-function M.stop_hexer(force)
-
-end
-
 function M.suspend_hexer()
   -- local core = require("hexer.core")
   -- core.suspend_hexer()
@@ -112,25 +107,11 @@ function M.setup(args)
     return
   end
 
-  require("hexer.core").setup()
+  require("hexer.commands").init()
 
-  M.cfg = vim.tbl_deep_extend("force", M.cfg, args or {})
+  -- require("hexer.core").setup()
 
-  vim.api.nvim_create_user_command("Hexer", function(opts)
-    local t = require("hexer.commands")
-
-    print(t.commands.sava)
-
-
-    -- local command_args = opts.fargs
-    -- local command = require("hexer.commands").commands[command_args[1]]
-    -- if command then
-    --   command(vim.list_slice(command_args, 2));
-    -- end
-  end, {
-    nargs = "*",
-    complete = require("hexer.commands").complete
-  })
+  -- M.cfg = vim.tbl_deep_extend("force", M.cfg, args or {})
 end
 
 return M
